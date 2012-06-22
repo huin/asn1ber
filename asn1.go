@@ -56,9 +56,9 @@ func parseBool(bytes []byte) (ret bool, err error) {
 
 // INTEGER
 
-// parseInt64 treats the given bytes as a big-endian, signed integer and
+// ParseInt64 treats the given bytes as a big-endian, signed integer and
 // returns the result.
-func parseInt64(bytes []byte) (ret int64, err error) {
+func ParseInt64(bytes []byte) (ret int64, err error) {
 	if len(bytes) > 8 {
 		// We'll overflow an int64 in this case.
 		err = StructuralError{"integer too large"}
@@ -75,10 +75,33 @@ func parseInt64(bytes []byte) (ret int64, err error) {
 	return
 }
 
+// ParseUint64 treats the given bytes as a big-endian, unsigned integer and
+// returns the result.
+func ParseUint64(bytes []byte) (uint64, error) {
+	ret64, err := ParseInt64(bytes)
+	if err != nil {
+		return 0, err
+	}
+	return uint64(ret64), nil
+}
+
+// ParseUint32 treats the given bytes as a big-endian, unsigned integer and
+// returns the result.
+func ParseUint32(bytes []byte) (uint32, error) {
+	ret64, err := ParseInt64(bytes)
+	if err != nil {
+		return 0, err
+	}
+	if ret64 != int64(uint32(ret64)) {
+		return 0, StructuralError{"integer too large"}
+	}
+	return uint32(ret64), nil
+}
+
 // parseInt treats the given bytes as a big-endian, signed integer and returns
 // the result.
 func parseInt(bytes []byte) (int, error) {
-	ret64, err := parseInt64(bytes)
+	ret64, err := ParseInt64(bytes)
 	if err != nil {
 		return 0, err
 	}
@@ -427,7 +450,7 @@ func parseSequenceOf(bytes []byte, sliceType reflect.Type, elemType reflect.Type
 		if t.tag == tagGeneralString {
 			t.tag = tagPrintableString
 		}
-		if t.class != classUniversal || t.isCompound != compoundType || t.tag != expectedTag {
+		if t.class != ClassUniversal || t.isCompound != compoundType || t.tag != expectedTag {
 			err = StructuralError{"sequence tag mismatch"}
 			return
 		}
@@ -511,7 +534,7 @@ func parseField(v reflect.Value, bytes []byte, initOffset int, params fieldParam
 			return
 		}
 		var result interface{}
-		if !t.isCompound && t.class == classUniversal {
+		if !t.isCompound && t.class == ClassUniversal {
 			innerBytes := bytes[offset : offset+t.length]
 			switch t.tag {
 			case tagPrintableString:
@@ -523,7 +546,7 @@ func parseField(v reflect.Value, bytes []byte, initOffset int, params fieldParam
 			case tagUTF8String:
 				result, err = parseUTF8String(innerBytes)
 			case tagInteger:
-				result, err = parseInt64(innerBytes)
+				result, err = ParseInt64(innerBytes)
 			case tagBitString:
 				result, err = parseBitString(innerBytes)
 			case tagOID:
@@ -556,9 +579,9 @@ func parseField(v reflect.Value, bytes []byte, initOffset int, params fieldParam
 		return
 	}
 	if params.explicit {
-		expectedClass := classContextSpecific
+		expectedClass := ClassContextSpecific
 		if params.application {
-			expectedClass = classApplication
+			expectedClass = ClassApplication
 		}
 		if t.class == expectedClass && t.tag == *params.tag && (t.length == 0 || t.isCompound) {
 			if t.length > 0 {
@@ -603,16 +626,16 @@ func parseField(v reflect.Value, bytes []byte, initOffset int, params fieldParam
 		universalTag = tagGeneralizedTime
 	}
 
-	expectedClass := classUniversal
+	expectedClass := ClassUniversal
 	expectedTag := universalTag
 
 	if !params.explicit && params.tag != nil {
-		expectedClass = classContextSpecific
+		expectedClass = ClassContextSpecific
 		expectedTag = *params.tag
 	}
 
 	if !params.explicit && params.application && params.tag != nil {
-		expectedClass = classApplication
+		expectedClass = ClassApplication
 		expectedTag = *params.tag
 	}
 
@@ -695,7 +718,7 @@ func parseField(v reflect.Value, bytes []byte, initOffset int, params fieldParam
 		err = err1
 		return
 	case reflect.Int64:
-		parsedInt, err1 := parseInt64(innerBytes)
+		parsedInt, err1 := ParseInt64(innerBytes)
 		if err1 == nil {
 			val.SetInt(parsedInt)
 		}

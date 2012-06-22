@@ -490,7 +490,7 @@ func marshalField(out *forkableWriter, v reflect.Value, params fieldParameters) 
 		err = StructuralError{fmt.Sprintf("unknown Go type: %v", v.Type())}
 		return
 	}
-	class := classUniversal
+	class := ClassUniversal
 
 	if params.stringType != 0 {
 		if tag != tagPrintableString {
@@ -523,7 +523,7 @@ func marshalField(out *forkableWriter, v reflect.Value, params fieldParameters) 
 	if !params.explicit && params.tag != nil {
 		// implicit tag.
 		tag = *params.tag
-		class = classContextSpecific
+		class = ClassContextSpecific
 	}
 
 	err = marshalTagAndLength(tags, tagAndLength{class, tag, bodyLen, isCompound})
@@ -533,7 +533,7 @@ func marshalField(out *forkableWriter, v reflect.Value, params fieldParameters) 
 
 	if params.explicit {
 		err = marshalTagAndLength(explicitTag, tagAndLength{
-			class:      classContextSpecific,
+			class:      ClassContextSpecific,
 			tag:        *params.tag,
 			length:     bodyLen + tags.Len(),
 			isCompound: true,

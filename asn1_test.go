@@ -33,7 +33,7 @@ var int64TestData = []int64Test{
 
 func TestParseInt64(t *testing.T) {
 	for i, test := range int64TestData {
-		ret, err := parseInt64(test.in)
+		ret, err := ParseInt64(test.in)
 		if (err == nil) != test.ok {
 			t.Errorf("#%d: Incorrect error result (did fail? %v, expected: %v)", i, err == nil, test.ok)
 		}

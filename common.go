@@ -37,10 +37,10 @@ const (
 )
 
 const (
-	classUniversal       = 0
-	classApplication     = 1
-	classContextSpecific = 2
-	classPrivate         = 3
+	ClassUniversal       = 0
+	ClassApplication     = 1
+	ClassContextSpecific = 2
+	ClassPrivate         = 3
 )
 
 type tagAndLength struct {
